@@ -1,0 +1,28 @@
+name: Copilot PR Security Validation
+on:
+  pull_request:
+    types: [opened, synchronize]
+jobs:
+  autofix-validation:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run CodeQL security scan
+        uses: github/codeql-action/analyze@v3
+
+      - name: Enable Copilot Autofix
+        uses: github/copilot-autofix@v1
+        with:
+          apply-fixes: true
+
+      - name: Prevent merge if vulnerabilities exist
+        run: |
+          if [ -f vulnerable.txt ]; then
+            echo "Security issues remain. Blocking merge."
+            exit 1
+          fi
